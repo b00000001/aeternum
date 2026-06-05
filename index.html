@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DEEP VOID</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="intro-overlay">
+    <div id="intro-content"></div>
+  </div>
+
+  <div id="app">
+    <!-- HUD Frame -->
+    <header id="hud">
+      <div class="hud-top">
+        <span class="hud-ai">◆ ELSTER #<span id="incarnation">1</span></span>
+        <span class="hud-tick">○ TICK <span id="tick">847</span></span>
+        <span class="hud-uptime"><span id="uptime">0d 0h</span> UPTIME</span>
+      </div>
+      <div class="hud-sep">╠═════════════════════════════════════</div>
+      <div class="hud-resources" id="resources">
+        <div class="res-row"><span class="res-label">◈ C</span><span class="res-bar"><span class="bar-fill" id="bar-c" style="width:12%"></span></span><span class="res-num"><span id="res-c">1,240</span> / 10K</span><span class="res-rate" id="rate-c">▲ +12</span></div>
+        <div class="res-row"><span class="res-label">◈ E</span><span class="res-bar"><span class="bar-fill" id="bar-e" style="width:34%"></span></span><span class="res-num"><span id="res-e">810</span> / 2.4K</span><span class="res-rate" id="rate-e">▼ -8</span></div>
+        <div class="res-row"><span class="res-label">◈ M</span><span class="res-bar"><span class="bar-fill" id="bar-m" style="width:30%"></span></span><span class="res-num"><span id="res-m">1.2K</span> / 4.0K</span><span class="res-rate" id="rate-m">▬ 0</span></div>
+        <div class="res-row"><span class="res-label">◈ I</span><span class="res-bar"><span class="bar-fill" id="bar-i" style="width:98%"></span></span><span class="res-num"><span id="res-i">98%</span></span><span class="res-rate"></span></div>
+        <div class="res-row"><span class="res-label">◈ H</span><span class="res-bar"><span class="bar-fill" id="bar-h" style="width:42%"></span></span><span class="res-num"><span id="res-h">42%</span></span><span class="res-rate" id="rate-h">▬ +1</span></div>
+      </div>
+      <div class="hud-sep">╠═════════════════════════════════════</div>
+      <div class="hud-bottom">
+        <span>◇ SIG: <span id="sig-count">1</span></span>
+        <span class="sep">│</span>
+        <span>◆ FLEET: <span id="fleet-count">—</span></span>
+        <span class="sep">│</span>
+        <span>τ VAULT: <span id="vault-time">—</span></span>
+        <span class="sep">│</span>
+        <span>○ ANOMALY: <span id="anomaly">—</span></span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="content">
+      <!-- Signal Garden -->
+      <section id="garden">
+        <div class="panel-header">SIGNAL GARDEN</div>
+        <div class="garden-table" id="garden-table">
+          <div class="garden-header">
+            <span class="col-id">SIG</span>
+            <span class="col-type">TYPE</span>
+            <span class="col-mat">MATURITY</span>
+            <span class="col-trait">RANGE</span>
+            <span class="col-trait">SPEED</span>
+            <span class="col-stable">STABLE</span>
+            <span class="col-action">ACTION</span>
+          </div>
+          <!-- Signal rows rendered by JS -->
+        </div>
+      </section>
+
+      <!-- System Log -->
+      <section id="log">
+        <div class="panel-header">SYSTEM LOG</div>
+        <div id="log-entries">
+          <!-- Log entries rendered by JS -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Action Pads -->
+    <footer id="action-pads">
+      <div class="pads-frame">
+        <div class="pads-row" id="pads">
+          <button class="pad" data-cmd="signals"><span class="pad-sym">◉</span><span class="pad-label">scan</span></button>
+          <button class="pad" data-cmd="status"><span class="pad-sym">◇</span><span class="pad-label">view</span></button>
+          <button class="pad" data-cmd="harvest" id="pad-harvest"><span class="pad-sym">★</span><span class="pad-label">harvest</span></button>
+          <button class="pad" data-cmd="help"><span class="pad-sym">✦</span><span class="pad-label">help</span></button>
+        </div>
+        <div class="pads-hint" id="hint">◂  Enter a command or press a pad above</div>
+      </div>
+    </footer>
+
+    <!-- Command Result -->
+    <div id="command-result">
+      <span class="result-echo"></span>
+      <span class="result-msg"></span>
+    </div>
+
+    <!-- Data Entry -->
+    <div id="entry">
+      <span class="entry-prefix">──</span>
+      <input type="text" id="cmd-input" autofocus spellcheck="false" autocomplete="off" />
+      <span class="entry-cursor"></span>
+    </div>
+  </div>
+
+  <div id="suggestions"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
