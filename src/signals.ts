@@ -224,9 +224,10 @@ export function createRng(seed?: number): () => number {
 export function spawnSignal(
   existingIds: string[] = [],
   rng: () => number = Math.random,
+  unlockedTypes?: string[],
 ): SignalEntry {
   // 1. Weighted random type selection
-  const type = selectWeightedType(rng);
+  const type = selectWeightedType(rng, unlockedTypes);
 
   // 2. Generate ID
   const id = generateSignalId(existingIds, rng);
@@ -263,8 +264,11 @@ export function spawnSignal(
  * Select a signal type using weighted random selection based on rarity.
  * Higher rarity = lower probability of being selected.
  */
-function selectWeightedType(rng: () => number): SignalType {
-  const types = Object.keys(SIGNAL_TYPES) as SignalType[];
+function selectWeightedType(rng: () => number, unlockedTypes?: string[]): SignalType {
+  const allTypes = Object.keys(SIGNAL_TYPES) as SignalType[];
+  const types = unlockedTypes
+    ? allTypes.filter((t) => unlockedTypes.includes(t))
+    : allTypes;
   const weights = types.map((t) => SIGNAL_TYPES[t].rarity);
 
   const totalWeight = weights.reduce((sum, w) => sum + w, 0);
@@ -342,13 +346,14 @@ export function spawnSignals(
   count: number,
   existingSignals: { id: string }[] = [],
   rng: () => number = Math.random,
+  unlockedTypes?: string[],
 ): SignalEntry[] {
   const existingIds = existingSignals.map((s) => s.id);
   const newSignals: SignalEntry[] = [];
 
   for (let i = 0; i < count; i++) {
     const allIds = [...existingIds, ...newSignals.map((s) => s.id)];
-    const signal = spawnSignal(allIds, rng);
+    const signal = spawnSignal(allIds, rng, unlockedTypes);
     newSignals.push(signal);
   }
 

@@ -18,6 +18,8 @@ export interface GameState {
   signals: SignalEntry[];
   log: LogEntry[];
   commandBuffer: string;
+  unlockedTiers: string[];
+  lore: LoreEntry[];
 }
 
 export interface SignalEntry {
@@ -34,6 +36,12 @@ export interface LogEntry {
   tick: number;
   message: string;
   type: "info" | "success" | "warning" | "danger" | "system";
+}
+
+export interface LoreEntry {
+  tier: string;
+  fragment: string;
+  discoveredAt: number;
 }
 
 export function createInitialState(): GameState {
@@ -70,5 +78,7 @@ export function createInitialState(): GameState {
       { tick: 842, message: "◉ System: COLONIAL AI INITIALIZED — v0.3", type: "system" },
     ],
     commandBuffer: "",
+    unlockedTiers: ["WHISPER"],
+    lore: [],
   };
 }

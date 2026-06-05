@@ -127,6 +127,15 @@ const migrations: Migration[] = [
       signals,
       log,
       commandBuffer: str(d.commandBuffer, ""),
+      unlockedTiers: arr(d.unlockedTiers, ["WHISPER"]),
+      lore: arr(d.lore).map((l: any) => {
+        const loreEntry = obj(l);
+        return {
+          tier: str(loreEntry.tier, "UNKNOWN"),
+          fragment: str(loreEntry.fragment, ""),
+          discoveredAt: num(loreEntry.discoveredAt, 0),
+        };
+      }),
     };
   },
 

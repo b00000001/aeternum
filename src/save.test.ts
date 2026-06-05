@@ -58,6 +58,8 @@ function createTestState(overrides: Partial<GameState> = {}): GameState {
     ],
     log: [{ tick: 1000, message: "Test log entry", type: "info" }],
     commandBuffer: "",
+    unlockedTiers: ["WHISPER"],
+    lore: [],
     ...overrides,
   };
 }
@@ -200,6 +202,25 @@ describe("getSaveInfo", () => {
     expect(info?.tick).toBe(1000);
     expect(info?.version).toBe(1);
     expect(typeof info?.savedAt).toBe("number");
+  });
+});
+
+describe("progression", () => {
+  it("saves and loads unlocked tiers", () => {
+    const state = createTestState({ unlockedTiers: ["WHISPER", "ECHO"] });
+    saveGame(state);
+    const loaded = loadGame();
+    expect(loaded?.unlockedTiers).toEqual(["WHISPER", "ECHO"]);
+  });
+
+  it("saves and loads lore entries", () => {
+    const state = createTestState({
+      lore: [{ tier: "ECHO", fragment: "Test lore", discoveredAt: 100 }],
+    });
+    saveGame(state);
+    const loaded = loadGame();
+    expect(loaded?.lore.length).toBe(1);
+    expect(loaded?.lore[0].tier).toBe("ECHO");
   });
 });
 

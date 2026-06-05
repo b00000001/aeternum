@@ -11,6 +11,8 @@ import {
   type VoidEvent,
 } from "./events.js";
 import { playIntro } from "./intro.js";
+import { getNextLore, formatLore } from "./lore.js";
+import { formatAttune, unlockTier } from "./progression.js";
 import { loadGame, saveGame } from "./save.js";
 import {
   describeScanResult,
@@ -305,7 +307,7 @@ const padUseCount = new Map<string, number>();
 const PAD_LABELS = document.querySelectorAll(".pad-label") as NodeListOf<HTMLElement>;
 
 // ─── Command Handling ────────────────────────────────────────────────────
-const KNOWN_COMMANDS = ["signals", "status", "scan", "harvest", "save", "load", "help", "events"];
+const KNOWN_COMMANDS = ["signals", "status", "scan", "harvest", "save", "load", "help", "events", "attune", "lore"];
 
 function handleCommand(input: string) {
   const parts = input.trim().split(/\s+/);
@@ -321,7 +323,7 @@ function handleCommand(input: string) {
     }
 
     case "status":
-      pushResult("status", "All systems nominal");
+      pushResult("status", `All systems nominal — Tiers: ${state.unlockedTiers.join(", ")}`);
       break;
 
     case "scan": {
@@ -332,6 +334,7 @@ function handleCommand(input: string) {
         const sig = spawnSignal(
           state.signals.map((s) => s.id),
           Math.random,
+          state.unlockedTiers,
         );
         state.signals.push(sig);
         newSignals.push(sig);
@@ -367,6 +370,22 @@ function handleCommand(input: string) {
             state.resources[resourceKey].current + yieldAmount,
           );
         }
+
+        // Check for lore fragments on harvest (ECHO tier and above)
+        const loreFragment = getNextLore(sig.type, state.lore);
+        if (loreFragment) {
+          state.lore.push({
+            tier: sig.type,
+            fragment: loreFragment,
+            discoveredAt: state.tick,
+          });
+          state.log.push({
+            tick: state.tick,
+            message: `◈ Lore fragment discovered: "${loreFragment}"`,
+            type: "success" as const,
+          });
+        }
+
         pushResult(
           "harvest",
           `Harvested ${sig.name} — +${yieldAmount} ${yieldType.charAt(0).toUpperCase()}`,
@@ -405,8 +424,25 @@ function handleCommand(input: string) {
     }
 
     case "help":
-      pushResult("help", "Commands:  signals  status  scan  harvest  save  load  events  help");
+      pushResult("help", "Commands:  signals  status  scan  harvest  save  load  attune  lore  events  help");
       break;
+
+    case "attune": {
+      if (parts.length > 1) {
+        const tier = parts[1].toUpperCase();
+        const result = unlockTier(state, tier);
+        pushResult("attune", result.message);
+        if (result.success) render();
+      } else {
+        pushResult("attune", formatAttune(state));
+      }
+      break;
+    }
+
+    case "lore": {
+      pushResult("lore", formatLore(state.lore));
+      break;
+    }
 
     case "events": {
       if (currentEvent) {
