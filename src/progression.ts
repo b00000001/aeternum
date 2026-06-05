@@ -9,7 +9,6 @@ import type { GameState } from "./types.js";
 
 export interface TierUnlock {
   tier: string;
-  signalType: string;
   cost: number;
   description: string;
 }
@@ -17,31 +16,26 @@ export interface TierUnlock {
 const TIER_UNLOCKS: TierUnlock[] = [
   {
     tier: "ECHO",
-    signalType: "ECHO",
     cost: 50,
     description: "Attune to reflected transmissions",
   },
   {
     tier: "PULSE",
-    signalType: "PULSE",
     cost: 200,
     description: "Tune into rhythmic energy waves",
   },
   {
     tier: "DRIFT",
-    signalType: "DRIFT",
     cost: 800,
     description: "Track wandering anomalies",
   },
   {
     tier: "FLARE",
-    signalType: "FLARE",
     cost: 3200,
     description: "Detect violent energy bursts",
   },
   {
     tier: "ANOMALY",
-    signalType: "ANOMALY",
     cost: 12800,
     description: "Perceive reality-warping signals",
   },

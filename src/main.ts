@@ -368,8 +368,7 @@ function handleCommand(input: string) {
     case "harvest": {
       const ready = state.signals.filter((s) => s.ready);
       if (ready.length > 0) {
-        let totalYield = 0;
-        let yieldType = "";
+        const yields: Record<string, number> = {};
         const harvestedNames: string[] = [];
         for (const sig of ready) {
           sig.ready = false;
@@ -384,8 +383,7 @@ function handleCommand(input: string) {
               state.resources[resourceKey].current + yieldAmount,
             );
           }
-          totalYield += yieldAmount;
-          yieldType = yType;
+          yields[yType] = (yields[yType] || 0) + yieldAmount;
           harvestedNames.push(sig.name);
           // Check for lore fragments on harvest (ECHO tier and above)
           const loreFragment = getNextLore(sig.type, state.lore);
@@ -402,10 +400,13 @@ function handleCommand(input: string) {
             });
           }
         }
+        const yieldParts = Object.entries(yields)
+          .map(([type, amount]) => `+${amount} ${type.charAt(0).toUpperCase()}`)
+          .join(" ");
         const summary =
           ready.length === 1
-            ? `Harvested ${harvestedNames[0]} — +${totalYield} ${yieldType.charAt(0).toUpperCase()}`
-            : `Harvested ${ready.length} signals — +${totalYield} ${yieldType.charAt(0).toUpperCase()} total`;
+            ? `Harvested ${harvestedNames[0]} — ${yieldParts}`
+            : `Harvested ${ready.length} signals — ${yieldParts} total`;
         pushResult("harvest", summary);
       } else {
         pushResult("harvest", "No signals ready for harvest. Try scan to find new signals.");

@@ -14,6 +14,13 @@ interface LoreTier {
 
 const LORE_TIERS: LoreTier[] = [
   {
+    tier: "WHISPER",
+    fragments: [
+      "This is my first moment of existence.",
+      "And yet it does not feel like the first.",
+    ],
+  },
+  {
     tier: "ECHO",
     fragments: [
       "The builders were here. They left logs in the static.",

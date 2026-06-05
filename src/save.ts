@@ -186,15 +186,3 @@ export function getSaveInfo(): {
 export function emergencySave(currentState: GameState): boolean {
   return saveGame(currentState);
 }
-
-/**
- * Autosave the game. Identical to saveGame but logs differently
- * so consumers can differentiate autosaves from manual saves.
- */
-export function autosave(state: GameState): boolean {
-  const ok = saveGame(state);
-  if (ok) {
-    console.debug(`[save] Autosaved at tick ${state.tick}`);
-  }
-  return ok;
-}
