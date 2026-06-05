@@ -202,8 +202,7 @@ export function canPurchase(state: GameState, nodeId: string): { ok: boolean; re
   const node = getNode(nodeId);
   if (!node) return { ok: false, reason: `Unknown node: ${nodeId}` };
 
-  const nodesState = (state as any).nodes as NodeState | undefined;
-  const purchased = nodesState?.purchased ?? [];
+  const purchased = state.nodes?.purchased ?? [];
 
   if (purchased.includes(nodeId)) {
     return { ok: false, reason: `${node.name} already purchased` };
@@ -232,16 +231,16 @@ export function purchaseNode(
   const node = getNode(nodeId)!;
 
   // Ensure nodes state exists
-  if (!(state as any).nodes) {
-    (state as any).nodes = { purchased: [] };
+  if (!state.nodes) {
+    state.nodes = { purchased: [] };
   }
-  const nodesState = (state as any).nodes as NodeState;
 
   // Deduct cost
   state.resources.compute.current -= node.cost;
 
   // Apply effect
-  const res = (state.resources as any)[node.effect.resource];
+  const resourceMap: Record<string, any> = state.resources;
+  const res = resourceMap[node.effect.resource];
   if (res) {
     res[node.effect.stat] += node.effect.delta;
     // Clamp capacity to reasonable minimum
@@ -251,7 +250,7 @@ export function purchaseNode(
   }
 
   // Record purchase
-  nodesState.purchased.push(nodeId);
+  state.nodes!.purchased.push(nodeId);
 
   return {
     success: true,
@@ -260,8 +259,7 @@ export function purchaseNode(
 }
 
 export function formatNodes(state: GameState): string {
-  const nodesState = (state as any).nodes as NodeState | undefined;
-  const purchased = nodesState?.purchased ?? [];
+  const purchased = state.nodes?.purchased ?? [];
 
   const lines: string[] = ["═══ UPGRADE NODES ═══", ""];
 

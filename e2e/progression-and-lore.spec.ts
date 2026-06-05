@@ -173,3 +173,41 @@ test("tab completion — includes lore", async ({ page }) => {
   const value = await input.inputValue();
   expect(value).toBe("lore");
 });
+
+// ─── Node System ────────────────────────────────────────────────────────
+
+test("nodes — shows all 5 categories", async ({ page }) => {
+  await runCommand(page, "nodes");
+  const result = await getCommandResult(page);
+  expect(result).toContain("Power");
+  expect(result).toContain("Processor");
+  expect(result).toContain("Memory");
+  expect(result).toContain("Shield");
+  expect(result).toContain("Cooler");
+});
+
+test("upgrade — purchases node and deducts compute", async ({ page }) => {
+  await runCommand(page, "upgrade power-1");
+  const result = await getCommandResult(page);
+  expect(result).toContain("Upgraded");
+  expect(result).toContain("Capacitor Bank");
+  expect(result).toContain("-15C");
+});
+
+// ─── Breeding ───────────────────────────────────────────────────────────
+
+test("breed — shows lab status", async ({ page }) => {
+  await runCommand(page, "breed");
+  const result = await getCommandResult(page);
+  expect(result).toContain("breed");
+});
+
+// ─── Help includes new commands ─────────────────────────────────────────
+
+test("help — lists nodes, upgrade, and breed", async ({ page }) => {
+  await runCommand(page, "help");
+  const result = await getCommandResult(page);
+  expect(result).toContain("nodes");
+  expect(result).toContain("upgrade");
+  expect(result).toContain("breed");
+});

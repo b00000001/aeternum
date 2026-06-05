@@ -128,6 +128,7 @@ const migrations: Migration[] = [
       log,
       commandBuffer: str(d.commandBuffer, ""),
       unlockedTiers: arr(d.unlockedTiers, ["WHISPER"]),
+      nodes: { purchased: arr(d.nodes?.purchased ?? []) },
       lore: arr(d.lore).map((l: any) => {
         const loreEntry = obj(l);
         return {

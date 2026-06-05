@@ -127,8 +127,11 @@ function render() {
   els.barH.style.width = `${r.heat.current}%`;
 
   // Rate arrows
-  const rateStr = (v: number) =>
-    v > 0 ? `▲ +${Math.round(v)}` : v < 0 ? `▼ ${Math.abs(Math.round(v))}` : `▬ 0`;
+  const rateStr = (v: number) => {
+    if (v === 0) return `▬ 0`;
+    const display = Math.abs(v) < 1 ? v.toFixed(1) : String(Math.round(v));
+    return v > 0 ? `▲ +${display}` : `▼ ${display}`;
+  };
   els.rateC.textContent = rateStr(r.compute.rate);
   els.rateE.textContent = rateStr(r.energy.rate);
   els.rateM.textContent = rateStr(r.memory.rate);
@@ -449,7 +452,7 @@ function handleCommand(input: string) {
     case "help":
       pushResult(
         "help",
-        "Commands:  signals  status  scan  harvest  save  load  attune  nodes  upgrade  lore  events  help",
+        "Commands:  signals  status  scan  harvest  save  load  attune  nodes  upgrade  breed  lore  events  help",
       );
       break;
 

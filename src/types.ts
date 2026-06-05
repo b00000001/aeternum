@@ -62,7 +62,7 @@ export function createInitialState(): GameState {
     signals: [
       {
         id: "S-001",
-        name: "WHISPER",
+        name: "Silent whisper",
         type: "WHISPER",
         maturity: 31,
         traits: ["+Range", "+Speed"],
@@ -81,5 +81,6 @@ export function createInitialState(): GameState {
     commandBuffer: "",
     unlockedTiers: ["WHISPER"],
     lore: [],
+    nodes: { purchased: [] },
   };
 }
