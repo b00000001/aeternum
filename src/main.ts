@@ -3,6 +3,7 @@
  * No xterm.js. Pure DOM rendering with cold greyscale architectural aesthetic.
  */
 
+import { scheduleWhisper, scheduleGlitch, cleanupAmbient } from "./ambient.js";
 import {
   applyOutcomes,
   formatEvent,
@@ -356,40 +357,44 @@ function handleCommand(input: string) {
     case "harvest": {
       const ready = state.signals.filter((s) => s.ready);
       if (ready.length > 0) {
-        const sig = ready[0];
-        sig.ready = false;
-        sig.maturity = 0;
-        // Use signal type's yieldBase and yieldType from the signals module
-        const sigConfig = SIGNAL_TYPES[sig.type as SignalType];
-        const yieldAmount = sigConfig?.yieldBase ?? 50;
-        const yieldType = sigConfig?.yieldType ?? "compute";
-        const resourceKey = yieldType as keyof typeof state.resources;
-        if (state.resources[resourceKey]) {
-          state.resources[resourceKey].current = Math.min(
-            state.resources[resourceKey].capacity,
-            state.resources[resourceKey].current + yieldAmount,
-          );
+        let totalYield = 0;
+        let yieldType = "";
+        const harvestedNames: string[] = [];
+        for (const sig of ready) {
+          sig.ready = false;
+          sig.maturity = 0;
+          const sigConfig = SIGNAL_TYPES[sig.type as SignalType];
+          const yieldAmount = sigConfig?.yieldBase ?? 50;
+          const yType = sigConfig?.yieldType ?? "compute";
+          const resourceKey = yType as keyof typeof state.resources;
+          if (state.resources[resourceKey]) {
+            state.resources[resourceKey].current = Math.min(
+              state.resources[resourceKey].capacity,
+              state.resources[resourceKey].current + yieldAmount,
+            );
+          }
+          totalYield += yieldAmount;
+          yieldType = yType;
+          harvestedNames.push(sig.name);
+          // Check for lore fragments on harvest (ECHO tier and above)
+          const loreFragment = getNextLore(sig.type, state.lore);
+          if (loreFragment) {
+            state.lore.push({
+              tier: sig.type,
+              fragment: loreFragment,
+              discoveredAt: state.tick,
+            });
+            state.log.push({
+              tick: state.tick,
+              message: `◈ Lore fragment discovered: "${loreFragment}"`,
+              type: "success" as const,
+            });
+          }
         }
-
-        // Check for lore fragments on harvest (ECHO tier and above)
-        const loreFragment = getNextLore(sig.type, state.lore);
-        if (loreFragment) {
-          state.lore.push({
-            tier: sig.type,
-            fragment: loreFragment,
-            discoveredAt: state.tick,
-          });
-          state.log.push({
-            tick: state.tick,
-            message: `◈ Lore fragment discovered: "${loreFragment}"`,
-            type: "success" as const,
-          });
-        }
-
-        pushResult(
-          "harvest",
-          `Harvested ${sig.name} — +${yieldAmount} ${yieldType.charAt(0).toUpperCase()}`,
-        );
+        const summary = ready.length === 1
+          ? `Harvested ${harvestedNames[0]} — +${totalYield} ${yieldType.charAt(0).toUpperCase()}`
+          : `Harvested ${ready.length} signals — +${totalYield} ${yieldType.charAt(0).toUpperCase()} total`;
+        pushResult("harvest", summary);
       } else {
         pushResult("harvest", "No signals ready for harvest. Try scan to find new signals.");
       }
@@ -577,45 +582,6 @@ els.pads.addEventListener("click", async (e) => {
   els.cmdInput.dispatchEvent(event);
 });
 
-// ─── Signal Whisper ───────────────────────────────────────────────────────
-function scheduleWhisper() {
-  const delay = 30000 + Math.random() * 30000;
-  setTimeout(() => {
-    const el = document.createElement("div");
-    el.className = "whisper-scan-line";
-    el.style.cssText =
-      "position:fixed;bottom:60px;left:0;width:100%;height:1px;pointer-events:none;z-index:999;" +
-      "background:linear-gradient(90deg,transparent 0%,rgba(191,207,210,0.12) 30%,rgba(174,181,184,0.25) 50%,rgba(191,207,210,0.12) 70%,transparent 100%);" +
-      "animation:whisper-scan 1.8s ease-out forwards;";
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1900);
-    scheduleWhisper();
-  }, delay);
-}
-
-// ─── Character Glitch Effect (§4 ambient) ───────────────────────────────
-function scheduleGlitch() {
-  const delay = 30000 + Math.random() * 60000;
-  setTimeout(() => {
-    const targets = [els.tick, els.uptime, els.resC, els.resE, els.resM, els.resH];
-    const el = targets[Math.floor(Math.random() * targets.length)];
-    const orig = el.textContent || "";
-    if (orig.length < 2) {
-      scheduleGlitch();
-      return;
-    }
-    const pos = Math.floor(Math.random() * orig.length);
-    const hex = "0123456789ABCDEF";
-    el.textContent = orig.slice(0, pos) + hex[Math.floor(Math.random() * 16)] + orig.slice(pos + 1);
-    el.style.color = "var(--accent-data)";
-    setTimeout(() => {
-      el.textContent = orig;
-      el.style.color = "";
-    }, 80);
-    scheduleGlitch();
-  }, delay);
-}
-
 // ─── Keep focus on input ────────────────────────────────────────────────
 document.addEventListener("click", () => els.cmdInput.focus());
 
@@ -638,7 +604,7 @@ if (existingSave) {
   render();
   els.cmdInput.focus();
   scheduleWhisper();
-  scheduleGlitch();
+  scheduleGlitch(els);
 } else {
   state = createInitialState();
   // Play cinematic intro for new players
@@ -653,7 +619,7 @@ if (existingSave) {
       render();
       els.cmdInput.focus();
       scheduleWhisper();
-      scheduleGlitch();
+      scheduleGlitch(els);
     },
   });
 }
@@ -670,3 +636,10 @@ window.addEventListener("beforeunload", () => {
     saveGame(state);
   }
 });
+
+// Vite HMR cleanup — prevent duplicate ambient effect loops
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    cleanupAmbient();
+  });
+}
