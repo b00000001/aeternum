@@ -266,9 +266,7 @@ export function spawnSignal(
  */
 function selectWeightedType(rng: () => number, unlockedTypes?: string[]): SignalType {
   const allTypes = Object.keys(SIGNAL_TYPES) as SignalType[];
-  const types = unlockedTypes
-    ? allTypes.filter((t) => unlockedTypes.includes(t))
-    : allTypes;
+  const types = unlockedTypes ? allTypes.filter((t) => unlockedTypes.includes(t)) : allTypes;
   const weights = types.map((t) => SIGNAL_TYPES[t].rarity);
 
   const totalWeight = weights.reduce((sum, w) => sum + w, 0);

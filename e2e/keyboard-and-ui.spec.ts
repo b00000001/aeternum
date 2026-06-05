@@ -119,32 +119,15 @@ test.describe("Edge Cases", () => {
   });
 
   test("Empty signal garden — shows void message", async ({ page }) => {
-    // Inject a save with no signals
-    await injectSave(page, {
-      tick: 100,
-      phase: "boot",
-      incarnation: 1,
-      uptime: 0,
-      fleetCount: null,
-      vaultTime: null,
-      anomaly: "—",
-      veterancyLevel: "novice",
-      resources: {
-        compute: { current: 100, capacity: 10000, rate: 5 },
-        energy: { current: 50, capacity: 2400, rate: -2 },
-        memory: { current: 200, capacity: 4000, rate: 0 },
-        integrity: { current: 90, capacity: 100, rate: 1 },
-        heat: { current: 30, capacity: 100, rate: 0.5 },
-      },
-      signals: [],
-      log: [],
-    });
-
-    await page.goto("/?test");
+    // After navigate + waitForBoot, inject an empty-save and reload
+    await injectSave(page, { signals: [], unlockedTiers: ["WHISPER"], lore: [] });
+    await page.reload();
     await waitForBoot(page);
 
-    const gardenText = (await page.locator("#garden-table").textContent()) ?? "";
-    expect(gardenText).toContain("No signal data. The void is silent.");
+    const rows = await page.locator("#garden-table .garden-row").count();
+    expect(rows).toBe(0);
+    const empty = await page.locator("#garden-table .no-signals").textContent();
+    expect(empty).toContain("No signal data");
   });
 
   test("Save metadata — localStorage has version and savedAt", async ({ page }) => {

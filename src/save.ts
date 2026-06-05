@@ -10,7 +10,7 @@
  */
 
 import { detectVersion, migrate, SAVE_VERSION } from "./migration.js";
-import { type GameState } from "./types.js";
+import type { GameState } from "./types.js";
 
 // ─── Constants ──────────────────────────────────────────────────────────
 
@@ -96,6 +96,18 @@ export function loadGame(): GameState | null {
       console.warn("[save] Migrated data missing essential fields");
       localStorage.removeItem(SAVE_KEY);
       return null;
+    }
+
+    // Persist migrated save so future loads don't re-migrate
+    if (version < SAVE_VERSION) {
+      try {
+        localStorage.setItem(
+          SAVE_KEY,
+          JSON.stringify({ ...migrated, version: SAVE_VERSION, savedAt: Date.now() }),
+        );
+      } catch {
+        /* best effort */
+      }
     }
 
     // Cast and return

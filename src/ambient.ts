@@ -49,8 +49,7 @@ export function scheduleGlitch(els: DomElements): void {
     }
     const pos = Math.floor(Math.random() * orig.length);
     const hex = "0123456789ABCDEF";
-    el.textContent =
-      orig.slice(0, pos) + hex[Math.floor(Math.random() * 16)] + orig.slice(pos + 1);
+    el.textContent = orig.slice(0, pos) + hex[Math.floor(Math.random() * 16)] + orig.slice(pos + 1);
     el.style.color = "var(--accent-data)";
     setTimeout(() => {
       el.textContent = orig;

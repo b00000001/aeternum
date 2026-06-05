@@ -3,7 +3,7 @@
  * No xterm.js. Pure DOM rendering with cold greyscale architectural aesthetic.
  */
 
-import { scheduleWhisper, scheduleGlitch, cleanupAmbient } from "./ambient.js";
+import { cleanupAmbient, scheduleGlitch, scheduleWhisper } from "./ambient.js";
 import {
   applyOutcomes,
   formatEvent,
@@ -12,7 +12,7 @@ import {
   type VoidEvent,
 } from "./events.js";
 import { playIntro } from "./intro.js";
-import { getNextLore, formatLore } from "./lore.js";
+import { formatLore, getNextLore } from "./lore.js";
 import { formatAttune, unlockTier } from "./progression.js";
 import { loadGame, saveGame } from "./save.js";
 import {
@@ -308,7 +308,18 @@ const padUseCount = new Map<string, number>();
 const PAD_LABELS = document.querySelectorAll(".pad-label") as NodeListOf<HTMLElement>;
 
 // ─── Command Handling ────────────────────────────────────────────────────
-const KNOWN_COMMANDS = ["signals", "status", "scan", "harvest", "save", "load", "help", "events", "attune", "lore"];
+const KNOWN_COMMANDS = [
+  "signals",
+  "status",
+  "scan",
+  "harvest",
+  "save",
+  "load",
+  "help",
+  "events",
+  "attune",
+  "lore",
+];
 
 function handleCommand(input: string) {
   const parts = input.trim().split(/\s+/);
@@ -391,9 +402,10 @@ function handleCommand(input: string) {
             });
           }
         }
-        const summary = ready.length === 1
-          ? `Harvested ${harvestedNames[0]} — +${totalYield} ${yieldType.charAt(0).toUpperCase()}`
-          : `Harvested ${ready.length} signals — +${totalYield} ${yieldType.charAt(0).toUpperCase()} total`;
+        const summary =
+          ready.length === 1
+            ? `Harvested ${harvestedNames[0]} — +${totalYield} ${yieldType.charAt(0).toUpperCase()}`
+            : `Harvested ${ready.length} signals — +${totalYield} ${yieldType.charAt(0).toUpperCase()} total`;
         pushResult("harvest", summary);
       } else {
         pushResult("harvest", "No signals ready for harvest. Try scan to find new signals.");
@@ -429,7 +441,10 @@ function handleCommand(input: string) {
     }
 
     case "help":
-      pushResult("help", "Commands:  signals  status  scan  harvest  save  load  attune  lore  events  help");
+      pushResult(
+        "help",
+        "Commands:  signals  status  scan  harvest  save  load  attune  lore  events  help",
+      );
       break;
 
     case "attune": {
@@ -623,19 +638,20 @@ if (existingSave) {
     },
   });
 }
+// ─── Save on tab close / navigation (skipped in test mode) ────
+if (!window.location.search.includes("test")) {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden" && state?.phase === "active") {
+      saveGame(state);
+    }
+  });
 
-// ─── Save on tab close / navigation ─────────────────────────────────────
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden" && state?.phase === "active") {
-    saveGame(state);
-  }
-});
-
-window.addEventListener("beforeunload", () => {
-  if (state?.phase === "active") {
-    saveGame(state);
-  }
-});
+  window.addEventListener("beforeunload", () => {
+    if (state?.phase === "active") {
+      saveGame(state);
+    }
+  });
+}
 
 // Vite HMR cleanup — prevent duplicate ambient effect loops
 if (import.meta.hot) {
