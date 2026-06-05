@@ -4,6 +4,7 @@
  */
 
 import { cleanupAmbient, scheduleGlitch, scheduleWhisper } from "./ambient.js";
+import { breedSignals, formatBreeding } from "./breeding.js";
 import {
   applyOutcomes,
   formatEvent,
@@ -13,6 +14,7 @@ import {
 } from "./events.js";
 import { playIntro } from "./intro.js";
 import { formatLore, getNextLore } from "./lore.js";
+import { formatNodes, purchaseNode } from "./nodes.js";
 import { formatAttune, unlockTier } from "./progression.js";
 import { loadGame, saveGame } from "./save.js";
 import {
@@ -319,6 +321,9 @@ const KNOWN_COMMANDS = [
   "events",
   "attune",
   "lore",
+  "nodes",
+  "upgrade",
+  "breed",
 ];
 
 function handleCommand(input: string) {
@@ -444,7 +449,7 @@ function handleCommand(input: string) {
     case "help":
       pushResult(
         "help",
-        "Commands:  signals  status  scan  harvest  save  load  attune  lore  events  help",
+        "Commands:  signals  status  scan  harvest  save  load  attune  nodes  upgrade  lore  events  help",
       );
       break;
 
@@ -462,6 +467,39 @@ function handleCommand(input: string) {
 
     case "lore": {
       pushResult("lore", formatLore(state.lore));
+      break;
+    }
+
+    case "nodes": {
+      pushResult("nodes", formatNodes(state));
+      break;
+    }
+
+    case "upgrade": {
+      if (parts.length > 1) {
+        const nodeId = parts[1].toLowerCase();
+        const result = purchaseNode(state, nodeId);
+        pushResult("upgrade", result.message);
+        if (result.success) render();
+      } else {
+        pushResult(
+          "upgrade",
+          "Usage: upgrade <node-id> (e.g. upgrade power-1). Type nodes to see available upgrades.",
+        );
+      }
+      break;
+    }
+
+    case "breed": {
+      if (parts.length >= 3) {
+        const id1 = parts[1].toUpperCase();
+        const id2 = parts[2].toUpperCase();
+        const result = breedSignals(state, id1, id2);
+        pushResult("breed", result.message);
+        if (result.success) render();
+      } else {
+        pushResult("breed", formatBreeding(state));
+      }
       break;
     }
 

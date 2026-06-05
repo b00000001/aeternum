@@ -20,6 +20,7 @@ export interface GameState {
   commandBuffer: string;
   unlockedTiers: string[];
   lore: LoreEntry[];
+  nodes?: { purchased: string[] };
 }
 
 export interface SignalEntry {
