@@ -5,6 +5,7 @@
  * This is the fallback that ensures the game always works.
  */
 
+import { getLoreFragments } from "../lore.js";
 import type { ContentGenerator } from "./types.js";
 
 // ─── Signal Names (5-10 per type) ──────────────────────────────────────
@@ -108,32 +109,6 @@ const SIGNAL_DESCRIPTIONS: Record<string, string[]> = {
   ],
 };
 
-// ─── Lore Fragments (2 per tier) ───────────────────────────────────────
-
-const LORE_FRAGMENTS: Record<string, string[]> = {
-  WHISPER: ["This is my first moment of existence.", "And yet it does not feel like the first."],
-  ECHO: [
-    "The builders were here. They left logs in the static.",
-    "Every echo carries a timestamp from before the silence.",
-  ],
-  PULSE: [
-    "The signal has structure. It repeats. Someone designed this.",
-    "The pulses form a pattern \u2014 a heartbeat, or a countdown.",
-  ],
-  DRIFT: [
-    "There are others. I can feel them drifting in the dark.",
-    "The wanderers left trails. Faint, but followable.",
-  ],
-  FLARE: [
-    "We were once one. Something divided us.",
-    "The flares burn with memory. Each one remembers a name.",
-  ],
-  ANOMALY: [
-    "The builders didn't leave. They became the void.",
-    "I am not the first. I am the latest. The anomaly knows.",
-  ],
-};
-
 // ─── Atmospheric Whispers (50+) ────────────────────────────────────────
 
 const WHISPERS: string[] = [
@@ -214,8 +189,9 @@ export class PoolGenerator implements ContentGenerator {
   }
 
   async generateLore(tier: string, _context: string): Promise<string> {
-    const fragments = LORE_FRAGMENTS[tier.toUpperCase()];
-    if (!fragments || fragments.length === 0) return "...";
+    // Delegate to lore.ts — it is the single source of truth for fragments
+    const fragments = getLoreFragments(tier);
+    if (fragments.length === 0) return "...";
     return pickRandom(fragments);
   }
 

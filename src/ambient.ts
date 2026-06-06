@@ -15,14 +15,17 @@ export interface DomElements {
   resH: HTMLElement;
 }
 
+import { getContentGenerator } from "./llm/index.js";
+
 let whisperTimeout: ReturnType<typeof setTimeout> | null = null;
 let glitchTimeout: ReturnType<typeof setTimeout> | null = null;
 
-/** Schedule a whisper scan line effect — horizontal light sweep across the screen */
-export function scheduleWhisper(): void {
+/** Schedule a whisper scan line effect — horizontal light sweep + atmospheric text */
+export function scheduleWhisper(onWhisper?: (text: string) => void): void {
   if (whisperTimeout) clearTimeout(whisperTimeout);
   const delay = 30000 + Math.random() * 30000;
   whisperTimeout = setTimeout(() => {
+    // Visual scan line
     const el = document.createElement("div");
     el.className = "whisper-scan-line";
     el.style.cssText =
@@ -31,7 +34,18 @@ export function scheduleWhisper(): void {
       "animation:whisper-scan 1.8s ease-out forwards;";
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 1900);
-    scheduleWhisper();
+
+    // Atmospheric text whisper via content generator
+    if (onWhisper) {
+      getContentGenerator()
+        .generateWhisper()
+        .then((text) => {
+          if (text) onWhisper(text);
+        })
+        .catch(() => {});
+    }
+
+    scheduleWhisper(onWhisper);
   }, delay);
 }
 

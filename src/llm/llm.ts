@@ -62,7 +62,8 @@ export class LLMGenerator implements ContentGenerator {
         const choices = (data as any).choices;
         return (choices?.[0]?.message?.content ?? "").trim();
       }
-    } catch {
+    } catch (err) {
+      console.warn(`[LLM] ${this.type} request failed:`, err);
       return "";
     }
   }

@@ -4,7 +4,6 @@
  */
 
 import { cleanupAmbient, scheduleGlitch, scheduleWhisper } from "./ambient.js";
-import { initContentGenerator, getContentGenerator, isLLMConnected, getLLMInfo } from "./llm/index.js";
 import { breedSignals, formatBreeding } from "./breeding.js";
 import {
   applyOutcomes,
@@ -14,7 +13,13 @@ import {
   type VoidEvent,
 } from "./events.js";
 import { playIntro } from "./intro.js";
-import { formatLore, getNextLore } from "./lore.js";
+import {
+  getContentGenerator,
+  getLLMInfo,
+  initContentGenerator,
+  isLLMConnected,
+} from "./llm/index.js";
+import { formatLore } from "./lore.js";
 import { formatNodes, purchaseNode } from "./nodes.js";
 import { formatAttune, unlockTier } from "./progression.js";
 import { loadGame, saveGame } from "./save.js";
@@ -297,7 +302,16 @@ setInterval(() => {
   if (!currentEvent) {
     const event = trySpawnEvent(state.signals);
     if (event) {
+      // Enhance event description with content generator (fire-and-forget)
       currentEvent = event;
+      getContentGenerator()
+        .generateEventDescription(event.title)
+        .then((desc) => {
+          if (desc && !desc.includes("has occurred") && currentEvent?.id === event.id) {
+            currentEvent = { ...event, description: desc };
+          }
+        })
+        .catch(() => {});
       state.log.push({
         tick: state.tick,
         message: `⚠ EVENT: ${event.title} — type 'events' to respond`,
@@ -330,7 +344,7 @@ const KNOWN_COMMANDS = [
   "breed",
 ];
 
-function handleCommand(input: string) {
+async function handleCommand(input: string) {
   const parts = input.trim().split(/\s+/);
   const cmd = parts[0];
 
@@ -359,6 +373,14 @@ function handleCommand(input: string) {
         );
         state.signals.push(sig);
         newSignals.push(sig);
+      }
+      // Enhance signal names with content generator (LLM or pool)
+      const gen = getContentGenerator();
+      for (const sig of newSignals) {
+        const enhancedName = await gen.generateSignalName(sig.type);
+        if (enhancedName && !enhancedName.startsWith("Unknown")) {
+          sig.name = enhancedName;
+        }
       }
       const description = describeScanResult(newSignals);
       pushResult("scan", description);
@@ -394,9 +416,10 @@ function handleCommand(input: string) {
           }
           yields[yType] = (yields[yType] || 0) + yieldAmount;
           harvestedNames.push(sig.name);
-          // Check for lore fragments on harvest (ECHO tier and above)
-          const loreFragment = getNextLore(sig.type, state.lore);
-          if (loreFragment) {
+          // Check for lore fragments on harvest
+          const gen = getContentGenerator();
+          const loreFragment = await gen.generateLore(sig.type, `Player harvested ${sig.name}`);
+          if (loreFragment && loreFragment !== "..." && loreFragment.length > 5) {
             state.lore.push({
               tier: sig.type,
               fragment: loreFragment,
@@ -404,7 +427,7 @@ function handleCommand(input: string) {
             });
             state.log.push({
               tick: state.tick,
-              message: `◈ Lore fragment discovered: "${loreFragment}"`,
+              message: `◈ Lore fragment: "${loreFragment}"`,
               type: "success" as const,
             });
           }
@@ -546,7 +569,7 @@ function handleCommand(input: string) {
 }
 
 // ─── Input: Text Field ───────────────────────────────────────────────────
-els.cmdInput.addEventListener("keydown", (e) => {
+els.cmdInput.addEventListener("keydown", async (e) => {
   if (state.phase !== "active") return;
 
   if (e.key === "Enter") {
@@ -562,7 +585,7 @@ els.cmdInput.addEventListener("keydown", (e) => {
         els.resultEcho.textContent = "";
         els.resultMsg.textContent = "";
       }
-      handleCommand(input);
+      await handleCommand(input);
     }
     render();
     return;
@@ -644,7 +667,17 @@ els.pads.addEventListener("click", async (e) => {
 document.addEventListener("click", () => els.cmdInput.focus());
 
 // ─── Content Generator (LLM or pool) ────────────────────────────────
-initContentGenerator();
+(async () => {
+  await initContentGenerator();
+})();
+
+// ─── Whisper callback — adds atmospheric text to log ────────────────
+function onWhisper(text: string) {
+  if (state?.phase === "active") {
+    state.log.push({ tick: state.tick, message: text, type: "info" as const });
+    renderLog();
+  }
+}
 
 // ─── Bootstrap ───────────────────────────────────────────────────────────
 // Check for existing save at startup
@@ -664,7 +697,7 @@ if (existingSave) {
   });
   render();
   els.cmdInput.focus();
-  scheduleWhisper();
+  scheduleWhisper(onWhisper);
   scheduleGlitch(els);
 } else {
   state = createInitialState();
@@ -679,7 +712,7 @@ if (existingSave) {
       });
       render();
       els.cmdInput.focus();
-      scheduleWhisper();
+      scheduleWhisper(onWhisper);
       scheduleGlitch(els);
     },
   });

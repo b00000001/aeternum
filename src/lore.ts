@@ -57,6 +57,12 @@ const LORE_TIERS: LoreTier[] = [
   },
 ];
 
+/** Get all fragments for a tier (used by content generators) */
+export function getLoreFragments(tier: string): string[] {
+  const loreTier = LORE_TIERS.find((l) => l.tier === tier);
+  return loreTier?.fragments ?? [];
+}
+
 /** Check if a tier has undiscovered lore */
 export function hasLoreForTier(tier: string, collectedLore: LoreEntry[]): boolean {
   const loreTier = LORE_TIERS.find((l) => l.tier === tier);
