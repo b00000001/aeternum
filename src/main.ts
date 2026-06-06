@@ -4,6 +4,7 @@
  */
 
 import { cleanupAmbient, scheduleGlitch, scheduleWhisper } from "./ambient.js";
+import { initContentGenerator, getContentGenerator, isLLMConnected, getLLMInfo } from "./llm/index.js";
 import { breedSignals, formatBreeding } from "./breeding.js";
 import {
   applyOutcomes,
@@ -642,6 +643,9 @@ els.pads.addEventListener("click", async (e) => {
 // ─── Keep focus on input ────────────────────────────────────────────────
 document.addEventListener("click", () => els.cmdInput.focus());
 
+// ─── Content Generator (LLM or pool) ────────────────────────────────
+initContentGenerator();
+
 // ─── Bootstrap ───────────────────────────────────────────────────────────
 // Check for existing save at startup
 const existingSave = loadGame();
@@ -655,7 +659,7 @@ if (existingSave) {
   if (log) log.style.display = "";
   state.log.push({
     tick: state.tick,
-    message: "◉ Save restored. Type help for commands.",
+    message: `◉ Save restored. Type help for commands.${isLLMConnected() ? " [LLM: " + getLLMInfo() + "]" : ""}`,
     type: "system" as const,
   });
   render();
