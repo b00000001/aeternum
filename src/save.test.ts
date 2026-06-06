@@ -83,7 +83,7 @@ describe("saveGame", () => {
     saveGame(state);
     const raw = store.get("deepvoid-save")!;
     const parsed = JSON.parse(raw);
-    expect(parsed.version).toBe(1);
+    expect(parsed.version).toBe(2);
   });
 
   it("stamps savedAt timestamp", () => {
@@ -172,7 +172,7 @@ describe("loadGame", () => {
     store.set("deepvoid-save", JSON.stringify(legacy));
     const loaded = loadGame();
     expect(loaded).not.toBeNull();
-    expect(loaded?.version).toBe(1);
+    expect(loaded?.version).toBe(2);
     expect(loaded?.tick).toBe(500);
   });
 });
@@ -200,7 +200,7 @@ describe("getSaveInfo", () => {
     const info = getSaveInfo();
     expect(info).not.toBeNull();
     expect(info?.tick).toBe(1000);
-    expect(info?.version).toBe(1);
+    expect(info?.version).toBe(2);
     expect(typeof info?.savedAt).toBe("number");
   });
 });

@@ -42,7 +42,7 @@ describe("migrate", () => {
       log: [],
     };
     const result = migrate(legacy, 0);
-    expect(result.version).toBe(1);
+    expect(result.version).toBe(2);
     expect(result.unlockedTiers).toEqual(["WHISPER"]);
     expect(result.lore).toEqual([]);
   });

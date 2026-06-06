@@ -14,7 +14,7 @@
 // ─── Version Constant ────────────────────────────────────────────────────
 
 /** Current save format version. Bump this when adding a new migration. */
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 // ─── Migration Type ──────────────────────────────────────────────────────
 
@@ -140,8 +140,15 @@ const migrations: Migration[] = [
     };
   },
 
-  // ── v1 → v2: (placeholder for future) ───────────────────────────────
-  // (data) => { ... return { ...data, version: 2, newField: ... }; },
+  // ── v1 → v2: Add harvestMultiplier ─────────────────────────────────
+  (data: any) => {
+    const d = obj(data);
+    return {
+      ...d,
+      version: 2,
+      harvestMultiplier: num(d.harvestMultiplier, 1.0, 0.1, 10),
+    };
+  },
 ];
 
 // ─── Public API ──────────────────────────────────────────────────────────

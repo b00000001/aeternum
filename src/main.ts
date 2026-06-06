@@ -21,6 +21,7 @@ import {
 } from "./llm/index.js";
 import { formatLore } from "./lore.js";
 import { formatNodes, purchaseNode } from "./nodes.js";
+import { calculatePressure, formatPressure } from "./pressure.js";
 import { formatAttune, unlockTier } from "./progression.js";
 import { loadGame, saveGame } from "./save.js";
 import {
@@ -270,9 +271,17 @@ setInterval(() => {
 
   // Apply resource rates from state — rates represent change per minute, tick runs every 2s
   const rateDivisor = 30;
+  const pressure = calculatePressure(state);
   for (const key of ["compute", "energy", "memory", "integrity", "heat"] as const) {
     const res = r[key];
-    res.current = Math.max(0, Math.min(res.capacity, res.current + res.rate / rateDivisor));
+    let effectiveRate = res.rate;
+    // Apply void pressure effects
+    if (key === "heat") {
+      effectiveRate *= pressure.heatMultiplier;
+    } else if (key === "energy") {
+      effectiveRate -= pressure.energyDrain;
+    }
+    res.current = Math.max(0, Math.min(res.capacity, res.current + effectiveRate / rateDivisor));
   }
 
   // Signal growth — use per-signal maturity rates from signals module
@@ -298,9 +307,9 @@ setInterval(() => {
     tickSinceSave = 0;
   }
 
-  // Random event spawning (3% chance per tick)
+  // Random event spawning (base 3% chance per tick, modified by void pressure)
   if (!currentEvent) {
-    const event = trySpawnEvent(state.signals);
+    const event = trySpawnEvent(state.signals, pressure.eventChance);
     if (event) {
       // Enhance event description with content generator (fire-and-forget)
       currentEvent = event;
@@ -342,6 +351,7 @@ const KNOWN_COMMANDS = [
   "nodes",
   "upgrade",
   "breed",
+  "pressure",
 ];
 
 async function handleCommand(input: string) {
@@ -405,7 +415,8 @@ async function handleCommand(input: string) {
           sig.ready = false;
           sig.maturity = 0;
           const sigConfig = SIGNAL_TYPES[sig.type as SignalType];
-          const yieldAmount = sigConfig?.yieldBase ?? 50;
+          const baseYield = sigConfig?.yieldBase ?? 50;
+          const yieldAmount = Math.round(baseYield * (state.harvestMultiplier ?? 1.0));
           const yType = sigConfig?.yieldType ?? "compute";
           const resourceKey = yType as keyof typeof state.resources;
           if (state.resources[resourceKey]) {
@@ -476,7 +487,7 @@ async function handleCommand(input: string) {
     case "help":
       pushResult(
         "help",
-        "Commands:  signals  status  scan  harvest  save  load  attune  nodes  upgrade  breed  lore  events  help",
+        "Commands:  signals  status  scan  harvest  save  load  attune  nodes  upgrade  breed  lore  events  pressure  help",
       );
       break;
 
@@ -536,6 +547,12 @@ async function handleCommand(input: string) {
       } else {
         pushResult("events", "No active events. The void is quiet.");
       }
+      break;
+    }
+
+    case "pressure": {
+      const pressure = calculatePressure(state);
+      pushResult("pressure", formatPressure(pressure));
       break;
     }
 

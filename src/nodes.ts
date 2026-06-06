@@ -19,7 +19,7 @@ export interface NodeDefinition {
   prerequisite: string | null;
   effect: {
     resource: string;
-    stat: "capacity" | "rate";
+    stat: "capacity" | "rate" | "multiplier";
     delta: number;
   };
 }
@@ -186,6 +186,120 @@ const NODES: NodeDefinition[] = [
     prerequisite: "cool-2",
     effect: { resource: "heat", stat: "rate", delta: -1.0 },
   },
+  // Research — Boost signal maturity rate (adds to compute rate)
+  {
+    id: "research-1",
+    category: "Research",
+    tier: 1,
+    name: "Signal Amplifier",
+    description: "+3 compute/tick",
+    cost: 30,
+    prerequisite: null,
+    effect: { resource: "compute", stat: "rate", delta: 3 },
+  },
+  {
+    id: "research-2",
+    category: "Research",
+    tier: 2,
+    name: "Deep Scanner",
+    description: "+8 compute/tick",
+    cost: 150,
+    prerequisite: "research-1",
+    effect: { resource: "compute", stat: "rate", delta: 8 },
+  },
+  {
+    id: "research-3",
+    category: "Research",
+    tier: 3,
+    name: "Quantum Analyzer",
+    description: "+20 compute/tick",
+    cost: 750,
+    prerequisite: "research-2",
+    effect: { resource: "compute", stat: "rate", delta: 20 },
+  },
+  // Battery — Boost energy rate
+  {
+    id: "battery-1",
+    category: "Battery",
+    tier: 1,
+    name: "Energy Cell",
+    description: "+1 energy/tick",
+    cost: 25,
+    prerequisite: null,
+    effect: { resource: "energy", stat: "rate", delta: 1 },
+  },
+  {
+    id: "battery-2",
+    category: "Battery",
+    tier: 2,
+    name: "Power Bank",
+    description: "+3 energy/tick",
+    cost: 125,
+    prerequisite: "battery-1",
+    effect: { resource: "energy", stat: "rate", delta: 3 },
+  },
+  {
+    id: "battery-3",
+    category: "Battery",
+    tier: 3,
+    name: "Capacitor Array",
+    description: "+8 energy/tick",
+    cost: 625,
+    prerequisite: "battery-2",
+    effect: { resource: "energy", stat: "rate", delta: 8 },
+  },
+  // Compressor — Boost memory capacity
+  {
+    id: "compress-1",
+    category: "Compressor",
+    tier: 1,
+    name: "Data Compactor",
+    description: "+300 memory capacity",
+    cost: 15,
+    prerequisite: null,
+    effect: { resource: "memory", stat: "capacity", delta: 300 },
+  },
+  {
+    id: "compress-2",
+    category: "Compressor",
+    tier: 2,
+    name: "Lossless Engine",
+    description: "+800 memory capacity",
+    cost: 75,
+    prerequisite: "compress-1",
+    effect: { resource: "memory", stat: "capacity", delta: 800 },
+  },
+  {
+    id: "compress-3",
+    category: "Compressor",
+    tier: 3,
+    name: "Neural Compressor",
+    description: "+2000 memory capacity",
+    cost: 375,
+    prerequisite: "compress-2",
+    effect: { resource: "memory", stat: "capacity", delta: 2000 },
+  },
+  // Salvage — Boost harvest yield (multiplier)
+  {
+    id: "salvage-1",
+    category: "Salvage",
+    tier: 1,
+    name: "Yield Extractor",
+    description: "+20% harvest yield",
+    cost: 40,
+    prerequisite: null,
+    effect: { resource: "harvest", stat: "multiplier", delta: 0.2 },
+  },
+  {
+    id: "salvage-2",
+    category: "Salvage",
+    tier: 2,
+    name: "Deep Salvage",
+    description: "+40% harvest yield",
+    cost: 200,
+    prerequisite: "salvage-1",
+    effect: { resource: "harvest", stat: "multiplier", delta: 0.4 },
+  },
 ];
 
 // ─── Public API ─────────────────────────────────────────────────────────
@@ -241,7 +355,10 @@ export function purchaseNode(
   // Apply effect
   const resourceMap: Record<string, any> = state.resources;
   const res = resourceMap[node.effect.resource];
-  if (res) {
+  if (node.effect.stat === "multiplier" && node.effect.resource === "harvest") {
+    // Harvest multiplier is a top-level GameState field
+    state.harvestMultiplier = (state.harvestMultiplier ?? 1.0) + node.effect.delta;
+  } else if (res) {
     res[node.effect.stat] += node.effect.delta;
     // Clamp capacity to reasonable minimum
     if (node.effect.stat === "capacity") {
@@ -263,7 +380,17 @@ export function formatNodes(state: GameState): string {
 
   const lines: string[] = ["═══ UPGRADE NODES ═══", ""];
 
-  const categories = ["Power", "Processor", "Memory", "Shield", "Cooler"];
+  const categories = [
+    "Power",
+    "Processor",
+    "Memory",
+    "Shield",
+    "Cooler",
+    "Research",
+    "Battery",
+    "Compressor",
+    "Salvage",
+  ];
   for (const cat of categories) {
     const catNodes = NODES.filter((n) => n.category === cat);
     lines.push(`[${cat}]`);

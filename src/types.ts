@@ -21,6 +21,7 @@ export interface GameState {
   unlockedTiers: string[];
   lore: LoreEntry[];
   nodes?: { purchased: string[] };
+  harvestMultiplier: number;
 }
 
 export interface SignalEntry {
@@ -82,5 +83,6 @@ export function createInitialState(): GameState {
     unlockedTiers: ["WHISPER"],
     lore: [],
     nodes: { purchased: [] },
+    harvestMultiplier: 1.0,
   };
 }

@@ -16,6 +16,7 @@ function createTestState(overrides: Partial<GameState> = {}): GameState {
     },
     unlockedTiers: ["WHISPER"],
     lore: [],
+    harvestMultiplier: 1.0,
     ...overrides,
   };
 }
@@ -33,8 +34,17 @@ describe("getNode", () => {
 });
 
 describe("getAllNodes", () => {
-  it("returns 15 nodes", () => {
-    expect(getAllNodes().length).toBe(15);
+  it("returns 26 nodes", () => {
+    expect(getAllNodes().length).toBe(26);
+  });
+
+  it("includes new categories", () => {
+    const nodes = getAllNodes();
+    const categories = [...new Set(nodes.map((n) => n.category))];
+    expect(categories).toContain("Research");
+    expect(categories).toContain("Battery");
+    expect(categories).toContain("Compressor");
+    expect(categories).toContain("Salvage");
   });
 });
 
@@ -143,6 +153,10 @@ describe("formatNodes", () => {
     expect(display).toContain("Memory");
     expect(display).toContain("Shield");
     expect(display).toContain("Cooler");
+    expect(display).toContain("Research");
+    expect(display).toContain("Battery");
+    expect(display).toContain("Compressor");
+    expect(display).toContain("Salvage");
   });
 
   it("shows INSTALLED for purchased nodes", () => {
@@ -150,5 +164,38 @@ describe("formatNodes", () => {
     (state as any).nodes = { purchased: ["power-1"] };
     const display = formatNodes(state);
     expect(display).toContain("INSTALLED");
+  });
+});
+
+describe("new node categories", () => {
+  it("research nodes increase compute rate", () => {
+    const state = createTestState();
+    purchaseNode(state, "research-1");
+    expect(state.resources.compute.rate).toBe(15);
+  });
+
+  it("battery nodes increase energy rate", () => {
+    const state = createTestState();
+    purchaseNode(state, "battery-1");
+    expect(state.resources.energy.rate).toBe(-7);
+  });
+
+  it("compressor nodes increase memory capacity", () => {
+    const state = createTestState();
+    purchaseNode(state, "compress-1");
+    expect(state.resources.memory.capacity).toBe(4300);
+  });
+
+  it("salvage nodes increase harvestMultiplier", () => {
+    const state = createTestState();
+    purchaseNode(state, "salvage-1");
+    expect(state.harvestMultiplier).toBeCloseTo(1.2);
+  });
+
+  it("salvage tier 2 stacks with tier 1", () => {
+    const state = createTestState();
+    purchaseNode(state, "salvage-1");
+    purchaseNode(state, "salvage-2");
+    expect(state.harvestMultiplier).toBeCloseTo(1.6);
   });
 });

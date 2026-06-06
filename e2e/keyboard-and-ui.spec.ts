@@ -142,7 +142,7 @@ test.describe("Edge Cases", () => {
     });
 
     expect(saveData).not.toBeNull();
-    expect(saveData.version).toBe(1);
+    expect(saveData.version).toBe(2);
     expect(typeof saveData.savedAt).toBe("number");
     expect(saveData.savedAt).toBeGreaterThan(0);
   });
