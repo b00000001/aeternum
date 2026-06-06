@@ -48,7 +48,7 @@ export interface LoreEntry {
 
 export function createInitialState(): GameState {
   return {
-    version: 1,
+    version: 2,
     tick: 847,
     phase: "boot",
     incarnation: 1,
@@ -79,6 +79,7 @@ export function createInitialState(): GameState {
       { tick: 847, message: "★ Signal detected: WHISPER — growing in the void.", type: "success" },
       { tick: 842, message: "◉ System: COLONIAL AI INITIALIZED — v0.3", type: "system" },
     ],
+    harvestMultiplier: 1.0,
     commandBuffer: "",
     unlockedTiers: ["WHISPER"],
     lore: [],

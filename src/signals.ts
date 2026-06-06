@@ -324,10 +324,10 @@ export function getMaturityRate(signal: SignalEntry): number {
 
   let rate = config.baseMaturity;
 
-  // Trait modifiers
-  if (signal.traits.includes("+Speed")) rate *= 1.2;
-  if (signal.traits.includes("+Power")) rate *= 1.1;
-  if (signal.traits.includes("+Resonance")) rate *= 1.5;
+  // Trait modifiers — recognize mutated prefixes (~, ++, !!)
+  if (signal.traits.some(t => t.includes("Speed"))) rate *= 1.2;
+  if (signal.traits.some(t => t.includes("Power"))) rate *= 1.1;
+  if (signal.traits.some(t => t.includes("Resonance"))) rate *= 1.5;
 
   // Unstable signals grow slower (chaotic data is harder to parse)
   if (signal.unstable) rate *= 0.7;

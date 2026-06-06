@@ -18,8 +18,12 @@ export class LLMGenerator implements ContentGenerator {
     this.type = type;
   }
 
+  private _available = true;
+  private _consecutiveFailures = 0;
+  private static MAX_FAILURES = 5;
+
   isAvailable(): boolean {
-    return true;
+    return this._available;
   }
 
   private async chat(prompt: string, maxTokens = 200): Promise<string> {
@@ -52,7 +56,8 @@ export class LLMGenerator implements ContentGenerator {
         signal: AbortSignal.timeout(5000),
       });
 
-      if (!res.ok) return "";
+      if (!res.ok) { this._consecutiveFailures++; return ""; }
+      this._consecutiveFailures = 0;
 
       const data = (await res.json()) as Record<string, unknown>;
 

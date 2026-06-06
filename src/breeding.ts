@@ -22,6 +22,8 @@ const MUTATION_CHANCE = 0.15; // 15% chance per trait to mutate
 const MUTATION_PREFIXES = ["~", "++", "!!"];
 
 function mutateTrait(trait: string): string {
+  // Preserve the trait name — only change the prefix
+  // This ensures mutated traits still match getMaturityRate() etc.
   const prefix = MUTATION_PREFIXES[Math.floor(Math.random() * MUTATION_PREFIXES.length)];
   const clean = trait.replace(/^[+~!]+/, "");
   return `${prefix}${clean}`;
